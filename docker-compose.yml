@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # DNS Filter Service (Go)
+  dns-filter:
+    build:
+      context: ./services/dns-filter
+      dockerfile: Dockerfile
+    ports:
+      - "8053:53/udp"    # DNS port
+      - "8080:8080"      # HTTP health check
+    environment:
+      - GO_ENV=development
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - guardnet
+    volumes:
+      - ./services/dns-filter:/app
+      - /app/bin  # Anonymous volume for compiled binaries
+
+  # API Gateway Service (Node.js)
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - JWT_SECRET=dev-secret-key
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - guardnet
+    volumes:
+      - ./services/api-gateway:/app
+      - /app/node_modules
+
+  # Dashboard (React)
+  dashboard:
+    build:
+      context: ./services/dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000
+      - REACT_APP_ENV=development
+    depends_on:
+      - api-gateway
+    networks:
+      - guardnet
+    volumes:
+      - ./services/dashboard:/app
+      - /app/node_modules
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=guardnet
+      - POSTGRES_USER=guardnet
+      - POSTGRES_PASSWORD=dev-password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - guardnet
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - guardnet
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api-gateway
+      - dashboard
+    networks:
+      - guardnet
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  guardnet:
+    driver: bridge
