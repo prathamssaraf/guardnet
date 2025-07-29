@@ -1,0 +1,56 @@
+# GuardNet DNS Filter Configuration
+
+# Server settings
+server:
+  dns_address: ":53"
+  http_address: ":8080"
+  
+# Database configuration
+database:
+  url: "postgres://guardnet:dev-password@postgres:5432/guardnet?sslmode=disable"
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: "5m"
+  
+# Redis cache configuration
+cache:
+  url: "redis://redis:6379"
+  pool_size: 10
+  min_idle_conns: 2
+  max_conn_age: "30m"
+  
+# DNS settings
+dns:
+  upstream_servers:
+    - "1.1.1.1:53"    # Cloudflare
+    - "8.8.8.8:53"    # Google
+    - "9.9.9.9:53"    # Quad9
+  timeout: "5s"
+  
+# Rate limiting
+rate_limiting:
+  enabled: true
+  queries_per_second: 100
+  max_queries_per_ip: 1000
+  window_duration: "1h"
+  
+# Security settings
+security:
+  enable_dnssec: true
+  block_malformed_queries: true
+  max_query_length: 253
+  
+# Logging
+logging:
+  level: "info"
+  format: "json"
+  
+# Metrics
+metrics:
+  enabled: true
+  path: "/metrics"
+  
+# Health checks
+health:
+  enabled: true
+  path: "/health"
