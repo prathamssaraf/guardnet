@@ -16,7 +16,9 @@
       "Bash(timeout:*)",
       "Bash(where docker)",
       "Bash(ls:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(start \"\" go run deploy_local.go)",
+      "Bash(start \"\" cmd /c \"go run simple_deploy.go\")"
     ],
     "deny": []
   }
