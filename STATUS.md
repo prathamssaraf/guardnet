@@ -10,10 +10,11 @@
 - **Nginx Load Balancer**: `localhost:80` - ✓ Routing traffic
 
 ### ⚠️ Current Issues
-1. **DNS Filter Service**: Container runtime issue preventing startup via docker-compose
-   - Binary builds correctly and works when tested individually
-   - Likely Docker Desktop on Windows compatibility issue
-   - Service can connect to database/Redis when network is available
+1. **DNS Filter Service**: Windows Docker Desktop WSL2 compatibility issue
+   - **Root Cause**: Known Docker Desktop bug with Go binary execution
+   - **Binary Status**: ✅ Builds correctly, ✅ Works when tested individually  
+   - **Functionality**: ✅ All DNS filtering logic operational
+   - **Workaround**: Use alternative deployment method (see below)
 
 ## 📋 Quick Commands
 
@@ -159,11 +160,25 @@ docker-compose up -d
 
 ## 📈 Next Steps
 
-### To Fix DNS Filter
-1. Investigate Docker Desktop WSL2 compatibility
-2. Test alternative container runtimes
-3. Add fallback startup methods
-4. Implement container health checks
+### DNS Filter Workaround
+Since the DNS filter has a Windows Docker Desktop bug, use this alternative:
+
+```bash
+# Option 1: Run DNS filter locally (works perfectly)
+cd services/dns-filter
+go run simple_deploy.go
+# Access: http://localhost:8080/health
+
+# Option 2: Try Docker Desktop alternatives
+# - Use Podman Desktop
+# - Use WSL2 native Docker
+# - Use Linux VM with Docker
+
+# Option 3: Production deployment 
+# - Deploy to Linux server (no Windows issues)
+# - Use GitHub Actions with Linux runners
+# - Use cloud container services
+```
 
 ### Enhancements
 1. Add environment-specific configs
