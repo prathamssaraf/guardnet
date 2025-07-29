@@ -18,7 +18,13 @@
       "Bash(ls:*)",
       "Bash(powershell:*)",
       "Bash(start \"\" go run deploy_local.go)",
-      "Bash(start \"\" cmd /c \"go run simple_deploy.go\")"
+      "Bash(start \"\" cmd /c \"go run simple_deploy.go\")",
+      "Bash(\"C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe\" --version)",
+      "Bash(\"C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker-compose.exe\" --version)",
+      "Bash(\"C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker-compose.exe\" up -d)",
+      "Bash(\"C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe\" run hello-world)",
+      "Bash(curl:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

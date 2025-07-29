@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -32,11 +32,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN addgroup -g 1001 -S guardnet && \
     adduser -u 1001 -S guardnet -G guardnet
 
-# Change ownership of nginx directories
-RUN chown -R guardnet:guardnet /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html
+# Change ownership of nginx directories and create necessary dirs
+RUN chown -R guardnet:guardnet /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html && \
+    mkdir -p /var/cache/nginx/client_temp && \
+    chown -R guardnet:guardnet /var/cache/nginx/client_temp
 
-# Switch to non-root user
-USER guardnet
+# Don't switch to non-root user for nginx to avoid permission issues
+# USER guardnet
 
 # Expose port
 EXPOSE 3000
