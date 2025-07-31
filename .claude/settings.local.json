@@ -34,7 +34,8 @@
       "Bash(python test:*)",
       "Bash(python:*)",
       "Bash(mv:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

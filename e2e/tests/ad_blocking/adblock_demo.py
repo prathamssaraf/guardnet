@@ -1,60 +1,13 @@
 #!/usr/bin/env python3
-import socket
-import struct
-import time
+import sys
+import os
+from pathlib import Path
 
-def create_dns_query(domain, query_type=1):
-    """Create a DNS query packet"""
-    transaction_id = 0x1234
-    flags = 0x0100
-    questions = 1
-    answer_rrs = 0
-    authority_rrs = 0 
-    additional_rrs = 0
-    
-    header = struct.pack('!HHHHHH', transaction_id, flags, questions,
-                        answer_rrs, authority_rrs, additional_rrs)
-    
-    question = b''
-    for part in domain.split('.'):
-        question += bytes([len(part)]) + part.encode()
-    question += b'\x00'
-    question += struct.pack('!HH', query_type, 1)
-    
-    return header + question
+# Add project root to path
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-def send_dns_query(server, port, domain):
-    """Send DNS query and return response"""
-    try:
-        query = create_dns_query(domain)
-        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(3)
-        
-        start_time = time.time()
-        sock.sendto(query, (server, port))
-        response, addr = sock.recvfrom(512)
-        end_time = time.time()
-        sock.close()
-        
-        response_time = round((end_time - start_time) * 1000, 2)
-        
-        header = struct.unpack('!HHHHHH', response[:12])
-        transaction_id, flags, questions, answers, authority, additional = header
-        
-        rcode = flags & 0x000F
-        
-        if rcode == 0:
-            return "ALLOWED", response_time
-        elif rcode == 3:
-            return "BLOCKED", response_time
-        else:
-            return f"ERROR_{rcode}", response_time
-            
-    except socket.timeout:
-        return "TIMEOUT", 3000
-    except Exception as e:
-        return f"ERROR", 0
+from e2e.utils.dns_client import DNSClient
 
 def demo_scenario():
     """Demonstrate a typical web browsing scenario with and without ad blocking"""
@@ -63,8 +16,8 @@ def demo_scenario():
     print("Simulating a user visiting popular websites...")
     print()
     
-    server = "127.0.0.1"
-    port = 8053
+    # Initialize DNS client
+    dns_client = DNSClient(server="127.0.0.1", port=8053)
     
     # Simulate a typical browsing session
     browsing_session = [
@@ -102,24 +55,24 @@ def demo_scenario():
         print("-" * 40)
         
         for domain, content_type in requests:
-            result, response_time = send_dns_query(server, port, domain)
+            result = dns_client.query(domain)
             total_requests += 1
             
-            if result == "BLOCKED":
+            if result.status == "BLOCKED":
                 blocked_requests += 1
                 status_icon = "[X]"
                 status_text = "BLOCKED"
                 # Assume blocked ads would take 500ms to load
                 total_time_saved += 500
-            elif result == "ALLOWED":
+            elif result.status == "ALLOWED":
                 allowed_requests += 1
                 status_icon = "[OK]"
                 status_text = "LOADED"
             else:
                 status_icon = "[?]"
-                status_text = result
+                status_text = result.status
             
-            print(f"  {status_icon} {domain:25} ({content_type:15}) - {status_text:8} ({response_time:5.1f}ms)")
+            print(f"  {status_icon} {domain:25} ({content_type:15}) - {status_text:8} ({result.response_time_ms:5.1f}ms)")
         
         print()
     
