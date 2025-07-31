@@ -1,17 +1,25 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
 
+	"guardnet/dns-filter/pkg/logger"
+
 	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 )
 
 // Connection represents a database connection with query methods
 type Connection struct {
-	db *sql.DB
+	db       *sql.DB
+	threatDB *ThreatDB
+	logger   *logger.Logger
 }
+
+// Types are defined in models.go
 
 // NewConnection creates a new database connection
 func NewConnection(databaseURL string) (*Connection, error) {
@@ -31,11 +39,29 @@ func NewConnection(databaseURL string) (*Connection, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	return &Connection{db: db}, nil
+	// Initialize logger
+	log := &logger.Logger{
+		Logger: logrus.New(),
+	}
+
+	// Initialize ThreatDB with the same connection
+	threatDB, err := NewThreatDB(databaseURL, log.Logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize threat database: %w", err)
+	}
+
+	return &Connection{
+		db:       db,
+		threatDB: threatDB,
+		logger:   log,
+	}, nil
 }
 
 // Close closes the database connection
 func (c *Connection) Close() error {
+	if c.threatDB != nil {
+		c.threatDB.Close()
+	}
 	if c.db != nil {
 		return c.db.Close()
 	}
@@ -44,54 +70,31 @@ func (c *Connection) Close() error {
 
 // CheckThreatDomain checks if a domain exists in the threat database
 func (c *Connection) CheckThreatDomain(domain string) (string, error) {
-	query := `
-		SELECT threat_type 
-		FROM threat_domains 
-		WHERE domain = $1 AND confidence_score > 0.7
-		LIMIT 1
-	`
-	
-	var threatType string
-	err := c.db.QueryRow(query, domain).Scan(&threatType)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Use the new ThreatDB implementation
+	isThreat, threatType, confidence, err := c.threatDB.IsThreatDomain(ctx, domain)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// Domain not found in threat database
-			return "", nil
-		}
-		return "", fmt.Errorf("failed to query threat domain: %w", err)
+		return "", fmt.Errorf("failed to check threat domain: %w", err)
 	}
-	
-	return threatType, nil
+
+	// Only block if confidence is above threshold (70%)
+	if isThreat && confidence >= 0.70 {
+		return threatType, nil
+	}
+
+	return "", nil
 }
 
 // LogDNSQuery logs a DNS query to the database
 func (c *Connection) LogDNSQuery(clientIP, domain, queryType, responseType, threatType string) error {
-	// First, try to find the router by client IP (simplified lookup)
-	var routerID string
-	routerQuery := `
-		SELECT id FROM routers 
-		WHERE last_seen > NOW() - INTERVAL '1 hour' 
-		LIMIT 1
-	`
-	
-	err := c.db.QueryRow(routerQuery).Scan(&routerID)
-	if err != nil {
-		// If no router found, use a default UUID or skip logging
-		routerID = "00000000-0000-0000-0000-000000000000"
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// Insert DNS log entry
-	insertQuery := `
-		INSERT INTO dns_logs (router_id, domain, query_type, response_type, threat_type, timestamp)
-		VALUES ($1, $2, $3, $4, $5, NOW())
-	`
-	
-	_, err = c.db.Exec(insertQuery, routerID, domain, queryType, responseType, threatType)
-	if err != nil {
-		return fmt.Errorf("failed to log DNS query: %w", err)
-	}
-	
-	return nil
+	// Use the new ThreatDB logging with response time calculation
+	responseTimeMs := 50 // Default response time
+	return c.threatDB.LogDNSQuery(ctx, domain, queryType, responseType, threatType, responseTimeMs, clientIP)
 }
 
 // GetUserByRouterMAC retrieves user information by router MAC address

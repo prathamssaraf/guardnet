@@ -72,10 +72,11 @@ func (m *MockConnection) UpdateRouterLastSeen(macAddress string) error {
 
 // GetThreatStats returns mock threat statistics
 func (m *MockConnection) GetThreatStats(since time.Time) (*ThreatStats, error) {
+	queryCount := int64(len(m.queryLogs))
 	return &ThreatStats{
-		TotalQueries:   int64(len(m.queryLogs)),
+		TotalQueries:   queryCount,
 		BlockedQueries: 15,
-		AllowedQueries: int64(len(m.queryLogs)) - 15,
+		AllowedQueries: queryCount - 15,
 		UniqueDomains:  10,
 	}, nil
 }

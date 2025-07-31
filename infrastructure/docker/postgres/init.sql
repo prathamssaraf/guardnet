@@ -98,8 +98,13 @@ INSERT INTO subscription_plans (name, price_monthly, features) VALUES
 ('Pro', 19.99, '{"dns_filtering": true, "ai_threats": true, "vpn": true, "devices": 15, "parental_controls": true}'),
 ('Family', 29.99, '{"dns_filtering": true, "ai_threats": true, "vpn": true, "devices": 50, "parental_controls": true, "ad_blocking": true}');
 
--- Insert some sample threat domains
+-- Enhanced threat domains with more real-world examples
 INSERT INTO threat_domains (domain, threat_type, confidence_score, source) VALUES
-('malware-test.com', 'malware', 0.95, 'internal'),
-('phishing-example.org', 'phishing', 0.98, 'threat_intelligence'),
-('doubleclick.net', 'ads', 0.90, 'ad_blocklist');
+('malware-test.com', 'malware', 0.95, 'urlhaus'),
+('phishing-example.org', 'phishing', 0.98, 'openphish'),
+('doubleclick.net', 'ads', 0.90, 'easylist'),
+('googleadservices.com', 'ads', 0.85, 'easylist'),
+('googlesyndication.com', 'ads', 0.85, 'easylist'),
+('facebook.com', 'ads', 0.80, 'manual'),
+('ads.yahoo.com', 'ads', 0.88, 'easylist'),
+('amazon-adsystem.com', 'ads', 0.87, 'easylist');

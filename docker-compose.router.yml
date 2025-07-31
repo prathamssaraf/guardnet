@@ -1,0 +1,108 @@
+version: '3.8'
+
+# GuardNet Router Service Configuration
+# Optimized for embedded/router deployment
+
+services:
+  # DNS Filter Service (Lightweight for routers)
+  guardnet-dns:
+    build:
+      context: ./router-build
+      dockerfile: Dockerfile.router
+    ports:
+      - "53:53/udp"      # Standard DNS port
+      - "8080:8080"      # Management API
+    environment:
+      - ROUTER_MODE=true
+      - DB_TYPE=sqlite   # Embedded database
+      - LOG_LEVEL=warn   # Reduce logging for performance
+      - CACHE_SIZE=10000 # Smaller cache for limited memory
+      - MAX_CONNECTIONS=100
+    volumes:
+      - guardnet_data:/data
+      - ./router-config:/config
+    networks:
+      - router_net
+    restart: always
+    mem_limit: 256m     # Router memory constraints
+    cpus: 1.0
+
+  # Lightweight Management Interface
+  guardnet-ui:
+    build:
+      context: ./router-ui
+      dockerfile: Dockerfile
+    ports:
+      - "8888:80"        # Router admin interface
+    environment:
+      - API_URL=http://guardnet-dns:8080
+      - ROUTER_MODE=true
+    depends_on:
+      - guardnet-dns
+    networks:
+      - router_net
+    restart: always
+    mem_limit: 64m
+
+  # Threat Updates (Periodic)
+  threat-updater:
+    build:
+      context: ./services/dns-filter
+      dockerfile: Dockerfile.router-updater
+    environment:
+      - ROUTER_MODE=true
+      - DB_TYPE=sqlite
+      - UPDATE_INTERVAL=3600  # Update every hour
+    volumes:
+      - guardnet_data:/data
+    depends_on:
+      - guardnet-dns
+    networks:
+      - router_net
+    restart: always
+    mem_limit: 128m
+
+  # DHCP Server with GuardNet DNS
+  guardnet-dhcp:
+    build:
+      context: ./router-dhcp
+      dockerfile: Dockerfile
+    network_mode: host    # Direct network access for DHCP
+    environment:
+      - DNS_SERVER=127.0.0.1
+      - ROUTER_IP=192.168.1.1
+      - DHCP_RANGE=192.168.1.100,192.168.1.200
+      - LEASE_TIME=24h
+    volumes:
+      - ./router-config/dhcp.conf:/etc/dhcp/dhcpd.conf
+    restart: always
+    privileged: true
+
+  # Network Analytics (Optional)
+  analytics:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=guardnet123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - analytics_data:/var/lib/grafana
+      - ./router-config/grafana:/etc/grafana/provisioning
+    networks:
+      - router_net
+    restart: always
+    profiles: ["analytics"]  # Optional service
+
+volumes:
+  guardnet_data:
+    driver: local
+  analytics_data:
+    driver: local
+
+networks:
+  router_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

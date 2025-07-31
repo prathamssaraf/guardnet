@@ -16,41 +16,25 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build the application (static binary for better compatibility)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -a -installsuffix cgo -o bin/dns-filter ./cmd/server
+# Build the application (static binary with explicit platform targeting)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags="-w -s -extldflags '-static'" -installsuffix cgo -o bin/dns-filter ./cmd/server
 
-# Final stage - using ubuntu for better compatibility
-FROM ubuntu:20.04
+# Final stage - using scratch for minimal static binary
+FROM scratch
 
-# Install ca-certificates and create user
-RUN apt-get update && \
-    apt-get install -y ca-certificates wget && \
-    rm -rf /var/lib/apt/lists/* && \
-    groupadd -g 1001 guardnet && \
-    useradd -u 1001 -g guardnet -m guardnet
+# Copy ca-certificates from builder
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-# Set working directory
-WORKDIR /app
+# Copy binary from builder stage (use absolute path)
+COPY --from=builder /app/bin/dns-filter /dns-filter
 
-# Copy binary from builder stage
-COPY --from=builder /app/bin/dns-filter /app/dns-filter
-
-# Copy any config files if needed
-COPY --from=builder /app/configs ./configs
-
-# Ensure binary has execute permissions and change ownership
-RUN chmod +x /app/dns-filter && \
-    chown -R guardnet:guardnet /app
-
-# Don't switch to non-root user for now (troubleshooting)
-# USER guardnet
+# Copy any config files if needed  
+COPY --from=builder /app/configs /configs
 
 # Expose ports
 EXPOSE 53/udp 8080/tcp
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+# Health check removed for scratch image (no wget available)
 
-# Use CMD instead of ENTRYPOINT for better compatibility
-CMD ["/app/dns-filter"]
+# Use absolute path in CMD
+CMD ["/dns-filter"]

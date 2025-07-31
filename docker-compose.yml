@@ -22,6 +22,25 @@ services:
       - ./services/dns-filter:/app
       - /app/bin  # Anonymous volume for compiled binaries
 
+  # Threat Intelligence Updater (Go)
+  threat-updater:
+    build:
+      context: ./services/dns-filter
+      dockerfile: Dockerfile.threat-updater
+    environment:
+      - GO_ENV=development
+      - DB_HOST=postgres
+      - DB_USER=guardnet
+      - DB_PASSWORD=dev-password
+      - DB_NAME=guardnet
+    depends_on:
+      - postgres
+    networks:
+      - guardnet
+    volumes:
+      - ./services/dns-filter:/app
+      - /app/bin  # Anonymous volume for compiled binaries
+
   # API Gateway Service (Node.js)
   api-gateway:
     build:
@@ -72,7 +91,8 @@ services:
       - POSTGRES_PASSWORD=dev-password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./infrastructure/docker/postgres/threat_intelligence_schema.sql:/docker-entrypoint-initdb.d/02_threat_schema.sql
     networks:
       - guardnet
 

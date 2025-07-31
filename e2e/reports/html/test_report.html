@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GuardNet E2E Test Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #2196F3; color: white; padding: 20px; border-radius: 8px; }
+        .summary { background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 8px; }
+        .test-category { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .passed { color: #4CAF50; }
+        .failed { color: #f44336; }
+        .skipped { color: #ff9800; }
+        .test-details { margin-left: 20px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ GuardNet E2E Test Report</h1>
+        <p>Generated on 2025-07-31 17:24:45</p>
+    </div>
+    
+    <div class="summary">
+        <h2>📊 Test Summary</h2>
+        <p><strong>Total Categories:</strong> 4</p>
+        <p><strong>Total Tests:</strong> 9</p>
+        <p><strong>Passed:</strong> <span class="passed">6</span></p>
+        <p><strong>Failed:</strong> <span class="failed">3</span></p>
+        <p><strong>Duration:</strong> 155.8 seconds</p>
+    </div>
+    
+    <div class="test-category">
+        <h2>🏥 Service Health Check</h2>
+        <p><strong>dns_service:</strong> <span class="passed">RUNNING</span></p><p><strong>api_gateway:</strong> <span class="passed">RUNNING</span></p><p><strong>dashboard:</strong> <span class="passed">RUNNING</span></p><p><strong>database:</strong> <span class="failed">FAILED</span></p>
+    </div>
+
+    <div class="test-category">
+        <h2>🧪 Dns Filtering Tests</h2>
+        <p><strong>Status:</strong> <span class="failed">FAILED</span></p>
+        <p><strong>Duration:</strong> 0.3s</p>
+        
+        <div class="test-details">
+
+            <p><strong>test_basic_dns.py:</strong> <span class="failed">FAILED</span></p>
+
+            <p><strong>test_dns.py:</strong> <span class="passed">PASSED</span></p>
+</div></div>
+    <div class="test-category">
+        <h2>🧪 Ad Blocking Tests</h2>
+        <p><strong>Status:</strong> <span class="passed">PASSED</span></p>
+        <p><strong>Duration:</strong> 0.6s</p>
+        
+        <div class="test-details">
+
+            <p><strong>adblock_demo.py:</strong> <span class="passed">PASSED</span></p>
+
+            <p><strong>test_adblock.py:</strong> <span class="passed">PASSED</span></p>
+
+            <p><strong>test_ads.py:</strong> <span class="passed">PASSED</span></p>
+</div></div>
+    <div class="test-category">
+        <h2>🧪 Threat Intel Tests</h2>
+        <p><strong>Status:</strong> <span class="skipped">SKIPPED</span></p>
+        <p><strong>Duration:</strong> 0.0s</p>
+        
+        <div class="test-details">
+</div></div>
+    <div class="test-category">
+        <h2>🧪 Router Deployment Tests</h2>
+        <p><strong>Status:</strong> <span class="failed">FAILED</span></p>
+        <p><strong>Duration:</strong> 1.7s</p>
+        
+        <div class="test-details">
+
+            <p><strong>test_router_deployment.py:</strong> <span class="failed">FAILED</span></p>
+
+            <p><strong>test_router_integration.py:</strong> <span class="failed">FAILED</span></p>
+
+            <p><strong>test_router_simple.py:</strong> <span class="passed">PASSED</span></p>
+</div></div>
+    <div class="test-category">
+        <h2>🧪 Performance Tests</h2>
+        <p><strong>Status:</strong> <span class="passed">PASSED</span></p>
+        <p><strong>Duration:</strong> 0.1s</p>
+        
+        <div class="test-details">
+
+            <p><strong>comprehensive_test.py:</strong> <span class="passed">PASSED</span></p>
+</div></div>
+    <div class="test-category">
+        <h2>🌐 Network Simulation Results</h2>
+        <p><strong>Status:</strong> <span class="passed">PASSED</span></p>
+        <p><strong>Total Queries:</strong> 244</p>
+        <p><strong>Total Blocked:</strong> 91</p>
+    </div>
+
+</body>
+</html>

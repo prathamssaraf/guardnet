@@ -1,0 +1,35 @@
+# Multi-stage build for threat-updater service
+FROM golang:1.21-alpine AS builder
+
+# Install dependencies
+RUN apk add --no-cache git ca-certificates
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the threat-updater binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s" \
+    -o bin/threat-updater \
+    ./cmd/threat-updater
+
+# Final stage - minimal runtime
+FROM scratch
+
+# Copy ca-certificates for HTTPS calls
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# Copy the binary
+COPY --from=builder /app/bin/threat-updater /threat-updater
+
+# Set the binary as entrypoint
+CMD ["/threat-updater"]

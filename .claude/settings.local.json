@@ -24,7 +24,17 @@
       "Bash(\"C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker-compose.exe\" up -d)",
       "Bash(\"C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe\" run hello-world)",
       "Bash(curl:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(pkill:*)",
+      "Bash(DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose build dns-filter)",
+      "Bash(DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose up -d dns-filter)",
+      "Bash(taskkill:*)",
+      "Bash(nslookup:*)",
+      "Bash(dig:*)",
+      "Bash(python test:*)",
+      "Bash(python:*)",
+      "Bash(mv:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

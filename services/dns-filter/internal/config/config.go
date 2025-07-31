@@ -5,6 +5,15 @@ import (
 	"strconv"
 )
 
+// Database holds database connection details
+type Database struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	Name     string
+}
+
 // Config holds all configuration for the DNS filter service
 type Config struct {
 	// Server addresses
@@ -13,6 +22,7 @@ type Config struct {
 	
 	// Database configuration
 	DatabaseURL string
+	Database    Database
 	
 	// Cache configuration
 	RedisURL string
@@ -41,6 +51,13 @@ func Load() (*Config, error) {
 		
 		// Database
 		DatabaseURL: getEnv("DATABASE_URL", "postgres://guardnet:dev-password@postgres:5432/guardnet?sslmode=disable"),
+		Database: Database{
+			Host:     getEnv("DB_HOST", "postgres"),
+			Port:     getEnvAsInt("DB_PORT", 5432),
+			User:     getEnv("DB_USER", "guardnet"),
+			Password: getEnv("DB_PASSWORD", "dev-password"),
+			Name:     getEnv("DB_NAME", "guardnet"),
+		},
 		
 		// Cache
 		RedisURL: getEnv("REDIS_URL", "redis://redis:6379"),
